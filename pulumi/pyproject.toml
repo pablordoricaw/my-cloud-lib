@@ -1,0 +1,17 @@
+[project]
+name = "my-components"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Pablo Ordorica Wiener", email = "pablo_ordoricaw@hotmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "pulumi>=3.217.0",
+    "pulumi-gcp>=9.10.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.8.12,<0.9.0"]
+build-backend = "uv_build"
