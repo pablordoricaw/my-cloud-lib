@@ -1,0 +1,107 @@
+- name: Setup Development Environment (Neovim & uv)
+  hosts: all
+  become: true
+  vars:
+    # Neovim version tag to checkout
+    neovim_version: "stable"
+    # User to install configuration for (assumes the SSH user)
+    target_user: "{{ ansible_user | default(ansible_env.SUDO_USER | default('ubuntu')) }}"
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    # -------------------------------------------------------------------------
+    # 1. Install Dependencies for Building Neovim from source
+    # -------------------------------------------------------------------------
+    - name: Install build dependencies
+      apt:
+        name:
+          - ninja-build
+          - gettext
+          - libtool
+          - libtool-bin
+          - autoconf
+          - automake
+          - cmake
+          - g++
+          - pkg-config
+          - unzip
+          - curl
+          - doxygen
+          - git
+          - ripgrep
+          - fd-find
+        state: present
+
+    # -------------------------------------------------------------------------
+    # 2. Install uv (includes uvx)
+    # -------------------------------------------------------------------------
+    - name: Download uv installer
+      get_url:
+        url: https://astral.sh/uv/install.sh
+        dest: /tmp/install_uv.sh
+        mode: '0755'
+
+    - name: Run uv installer
+      shell: /tmp/install_uv.sh
+      environment:
+        UV_INSTALL_DIR: "/usr/local/bin"
+      args:
+        creates: /usr/local/bin/uv
+
+    # -------------------------------------------------------------------------
+    # 3. Build and Install Neovim from Source
+    # -------------------------------------------------------------------------
+    - name: Clone Neovim repository
+      git:
+        repo: https://github.com/neovim/neovim.git
+        dest: /tmp/neovim
+        version: "{{ neovim_version }}"
+        depth: 1
+        force: yes
+
+    - name: Build Neovim (make CMAKE_BUILD_TYPE=RelWithDebInfo)
+      command: make CMAKE_BUILD_TYPE=RelWithDebInfo
+      args:
+        chdir: /tmp/neovim
+        creates: /tmp/neovim/build/bin/nvim
+
+    - name: Install Neovim (make install)
+      command: make install
+      args:
+        chdir: /tmp/neovim
+        creates: /usr/local/bin/nvim
+
+    # -------------------------------------------------------------------------
+    # 4. Setup Neovim Configuration for the User
+    # -------------------------------------------------------------------------
+    - name: Ensure .config directory exists
+      file:
+        path: "/home/{{ target_user }}/.config"
+        state: directory
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0755'
+
+    - name: Clone Kickstart Modular Neovim Config
+      git:
+        repo: https://github.com/pablordoricaw/kickstart-modular.nvim.git
+        dest: "/home/{{ target_user }}/.config/nvim"
+        version: master
+        force: yes
+      become: true
+      become_user: "{{ target_user }}"
+
+    # -------------------------------------------------------------------------
+    # 5. Cleanup
+    # -------------------------------------------------------------------------
+    - name: Cleanup build artifacts
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/neovim
+        - /tmp/install_uv.sh
