@@ -24,7 +24,7 @@ Deploy a standard Ubuntu development VM with optional GPU support and default ne
 import pulumi
 from my_components.compute import MyInstance, MyInstanceArgs
 
-# Deploy a standard student VM
+# Deploy an Ubuntu VM on GCP
 vm = MyInstance("dev-box", MyInstanceArgs(
     region="us-east1",
     zone="b",
@@ -44,7 +44,36 @@ pulumi.export("vm_ip", vm.public_ipv4)
 | --- | --- | --- |
 | `MyInstance` | Ubuntu GCP Compute Instance | <ul><li>GPU support</li><li>Deploy in default or in specified network/subnet</li></ul> |
 
+## Utility Scripts
+
+This library includes some CLI tools to automate common cloud tasks. You can run these scripts directly from this repository using `uvx`, without needing to clone the repo or install dependencies manually.
+
+**Available Scripts:**
+
+- `create-bucket` - Bootstraps a Google Cloud Storage bucket to serve as a shared Pulumi state backend for team projects.
+
+Features:
+
+- Creates the bucket (if it doesn't exist) with standard security settings.
+- Enables Uniform Bucket-Level Access.
+- Grants specified teammates (--users) the Storage Object User role so they can read/write state.
+
+Usage:
+
+```bash
+# Run directly via uvx (replace @v0.2.0 with desired version)
+uvx --from "git+https://github.com/pablordoricaw/my-cloud-lib.git@v0.2.0#subdirectory=pulumi" \
+    create-team-bucket \
+    <bucket-name> \
+    --project <team-gcp-project-id> \
+    --users teammate1@columbia.edu teammate2@columbia.edu
+```
 
 ## Cloud Configuration
 
 The cloud configuration is a set of Ansible playbooks.
+
+## Releases
+
+The repo uses Annotated Tags to version both the infrastructure and configuration as code together.
+
