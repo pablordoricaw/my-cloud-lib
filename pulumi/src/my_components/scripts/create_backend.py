@@ -11,8 +11,8 @@ def main():
         "bucket_name",
         type=str,
         nargs="?",  # Makes the positional argument optional
-        default="bkt-infra-state",
-        help="Name for the bucket. (default: 'bkt-infra-state')",
+        default="<project>-bkt-infra-state",
+        help="Name for the bucket. Remember that the name needs to be globally unique. (default: '<project>-bkt-infra-state')",
     )
 
     parser.add_argument(
@@ -44,7 +44,7 @@ def main():
     # Pass the project explicitly if provided; otherwise, let the client infer it from environment
     st_client = storage.Client(project=args.project)
 
-    bkt = storage.Bucket(st_client, args.bucket_name)
+    bkt = storage.Bucket(st_client, f"{args.project}-{args.bucket_name}")
 
     if not bkt.exists():
         bkt.storage_class = "STANDARD"

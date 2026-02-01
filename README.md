@@ -61,9 +61,8 @@ Features:
 Usage:
 
 ```bash
-# Run directly via uvx (replace @v0.2.0 with desired version)
-uvx --from "git+https://github.com/pablordoricaw/my-cloud-lib.git@v0.2.0#subdirectory=pulumi" \
-    create-team-bucket \
+uvx --from "git+https://github.com/pablordoricaw/my-cloud-lib.git@v0.2.1#subdirectory=pulumi" \
+    create-backend \
     <bucket-name> \
     --project <team-gcp-project-id> \
     --users teammate1@columbia.edu teammate2@columbia.edu
