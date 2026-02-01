@@ -1,4 +1,6 @@
 import argparse
+
+import google.auth
 from google.cloud import storage
 
 
@@ -41,10 +43,14 @@ def main():
     )
     args = parser.parse_args()
 
-    # Pass the project explicitly if provided; otherwise, let the client infer it from environment
-    st_client = storage.Client(project=args.project)
+    project_id = args.project
+    if not project_id:
+        _, project_id = google.auth.default()
 
-    bkt = storage.Bucket(st_client, f"{st_client.project}-{args.bucket_name}")
+    # Pass the project explicitly if provided; otherwise, let the client infer it from environment
+    st_client = storage.Client(project=project_id)
+
+    bkt = storage.Bucket(st_client, f"{project_id}-{args.bucket_name}")
 
     if not bkt.exists():
         bkt.storage_class = "STANDARD"
@@ -56,13 +62,13 @@ def main():
         bkt.iam_configuration.uniform_bucket_level_access_enabled = True
         bkt.patch()
 
-        print(f"Created bucket {bkt.name} in project {st_client.project} with:")
+        print(f"Created bucket {bkt.name} in project {project_id} with:")
         print(f" - Location: {bkt.location}")
         print(f" - Storage Class: {bkt.storage_class}")
         print(" - Uniform Bucket-Level Access: Enabled")
 
     else:
-        print(f"Bucket {bkt.name} already exists in project {st_client.project}.")
+        print(f"Bucket {bkt.name} already exists in project {project_id}.")
 
     if args.users:
         print("Manage user access to bucket")
